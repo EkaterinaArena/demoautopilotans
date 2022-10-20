@@ -1,7 +1,7 @@
 _schema-version: "3.2"
 ID: demoautopilotans
 description: Demo fiori app to be monitored by Alert and AutoPilot
-version: 0.0.1
+version: 0.0.2
 modules:
 - name: demoautopilotans-dest-content
   type: com.sap.application.content
