@@ -1,0 +1,93 @@
+_schema-version: "3.2"
+ID: demoautopilotans
+description: Demo fiori app to be monitored by Alert and AutoPilot
+version: 0.0.1
+modules:
+- name: demoautopilotans-dest-content
+  type: com.sap.application.content
+  requires:
+  - name: demoautopilotans-destination-service
+    parameters:
+      content-target: true
+  - name: demoautopilotans-repo-host
+    parameters:
+      service-key:
+        name: demoautopilotans-repo-host-key
+  - name: demoautopilotans-uaa
+    parameters:
+      service-key:
+        name: demoautopilotans-uaa-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: demoautopilotans_repo_host
+          ServiceInstanceName: demoautopilotans-html5-srv
+          ServiceKeyName: demoautopilotans-repo-host-key
+          sap.cloud.service: demoautopilotans
+        - Authentication: OAuth2UserTokenExchange
+          Name: demoautopilotans_uaa
+          ServiceInstanceName: demoautopilotans-xsuaa-srv
+          ServiceKeyName: demoautopilotans-uaa-key
+          sap.cloud.service: demoautopilotans
+        existing_destinations_policy: update
+  build-parameters:
+    no-source: true
+- name: demoautopilotans-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: demoautopilotans-repo-host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - demobusinesspartners.zip
+      name: demobusinesspartners
+      target-path: resources/
+- name: demobusinesspartners
+  type: html5
+  path: businesspartners
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: demoautopilotans-uaa
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: demoautopilotans-xsuaa-srv
+    service-plan: application
+- name: demoautopilotans-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: demoautopilotans-destination-service
+    service-plan: lite
+- name: demoautopilotans-repo-host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: demoautopilotans-html5-srv
+    service-plan: app-host
+parameters:
+  deploy_mode: html5-repo
